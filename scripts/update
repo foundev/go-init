@@ -1,0 +1,9 @@
+#!/bin/bash
+# Copyright 2021 Ryan Svihla
+#
+# scripts/update: Update application to run for its current checkout.
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+$DIR/bootstrap
+go mod tidy
+

@@ -1,0 +1,45 @@
+#!/bin/bash
+# Copyright 2021 Ryan Svihla
+#
+
+# script/bootstrap: Resolve all dependencies that the application requires to
+#                   run.
+
+
+
+GOV="1.17.1"
+if ! command -v go &> /dev/null
+then
+    echo "os $(uname -s) arch $(uname -m)"
+    if [ "$(uname -s)" = "Darwin" ]; then
+        echo "install via homebrew"
+        brew update
+        brew install go
+    fi
+
+    if [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "armv7l" ]; then
+        echo "arm found installing go"
+        curl -L -O https://golang.org/dl/go$GOV.linux-armv6l.tar.gz
+        sudo tar -C /usr/local -xzf go$GOV.linux-armv6l.tar.gz
+        echo "add ‘export PATH=\$PATH:/usr/local/go/bin’ to your .bashrc"
+        rm go$GOV.linux-armv6l.tar.gz
+    fi
+
+    if [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "amd64" ]; then
+        echo "amd64 found installing go"
+        curl -L -O https://golang.org/dl/go$GOV.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go$GOV.linux-amd64.tar.gz
+        echo "add 'export PATH=\$PATH:/usr/local/go/bin' to your .bashrc"
+        rm go$GOV.linux-arm64.tar.gz
+    fi
+
+else
+    echo "go installed skipping"
+fi
+
+if ! command -v golangci-lint &> /dev/null
+then
+    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.36.0
+else
+    echo "golangci-lint installed skipping"
+fi

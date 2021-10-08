@@ -1,0 +1,17 @@
+#!/bin/bash
+# Copyright 2021 Ryan Svihla
+#
+
+# script/test: Run test suite for application. 
+
+
+t="/tmp/go-cover.$$.tmp"
+go test -race -covermode=atomic  -coverprofile=$t ./... && go tool cover -func=$t 
+last=$?
+unlink $t || true
+if [ "$last" = "0" ]; then
+    echo "successfully ran"
+else
+    (exit 1)
+fi
+
