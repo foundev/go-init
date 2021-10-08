@@ -456,15 +456,17 @@ go test -race -covermode=atomic -coverprofile=$t ./... && go tool cover -html=$t
 
 func createInstall(org string, projectName string) string {
 	return strings.Join([]string{
-		fmt.Sprintf("#!/usr/bin/env bash\norig_dir=$(pwd)\ncd /tmp\ncurl -O https://github.com/%v/%v/archive/refs/heads/main.zip\n", org, projectName),
-		`# scripts/install.sh: install script for others to use, install.sh is a convention and why the name is different
-unzip main.zip
+		`#!/usr/bin/env bash
+# scripts/install.sh: install script for others to use, install.sh is a convention and why the name is different
+`,
+
+		fmt.Sprintf("orig_dir=$(pwd)\ncd /tmp\ncurl -L https://github.com/%v/%v/main.zip -o main.zip\n", org, projectName),
+		`unzip main.zip
 rm main.zip
-cd main
-./scripts/build
-echo "copying binary to /usr/local/bin/go-init need sudo permissions to write"
-sudo cp ./bin/go-init /usr/local/bin/
-cd ..
+`,
+		fmt.Sprintf("cd %v-main\n", projectName),
+		fmt.Sprintf("./scripts/build\necho \"copying binary to /usr/local/bin/%v need sudo permissions to write\"\nsudo cp ./bin/%v /usr/local/bin/\n", projectName, projectName),
+		`cd ..
 rm -fr main
 cd $orig_dir
 `}, "")
