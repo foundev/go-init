@@ -11,7 +11,7 @@ go-init <new project dir>
 ## how to install
 
 ```sh
-curl -s https://raw.githubusercontent.com/foundev/go-init/main/scripts/install.sh
+curl -s https://raw.githubusercontent.com/foundev/go-init/main/scripts/install.sh | bash
 ```
 
 ## how to build and run
