@@ -26,14 +26,15 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/go-git/go-git/v5/config"
 )
 
 func usage() string {
-	return "usage: go-init <new project dir>"
+	return "usage: go-init <new project dir> <github user> <optional: name on copyright>"
 }
 func main() {
 	args := os.Args
@@ -43,11 +44,20 @@ func main() {
 	}
 	dir := args[1]
 	org := args[2]
-	if err := createProject(dir, org); err != nil {
+	name := ""
+	if len(args) > 3 {
+		name = args[3]
+	}
+	if err := createProject(dir, org, name); err != nil {
 		fmt.Printf("unable to create project for dir '%v' with error '%v'", dir, err)
 		os.Exit(1)
 	}
-	fmt.Printf("project %v created\ngithub repo is expected to be http://github.com/%v/%v\n", dir, org, dir)
+	p := dir
+	if strings.IndexAny(dir, string(os.PathSeparator)) != -1 {
+		tokens := strings.Split(dir, string(os.PathSeparator))
+		p = tokens[len(tokens)-1]
+	}
+	fmt.Printf("project %v created\ngithub repo is expected to be http://github.com/%v/%v\n", dir, org, p)
 }
 
 type Gen struct {
@@ -56,11 +66,17 @@ type Gen struct {
 	Get  func() string
 }
 
-func createProject(dir string, org string) error {
+func createProject(dir string, org string, name string) error {
+	var err error
 	year := time.Now().Year()
-	author, err := getGitName()
-	if err != nil {
-		return err
+	author := ""
+	if name != "" {
+		author = name
+	} else {
+		author, err = getGitName()
+		if err != nil {
+			return err
+		}
 	}
 	if err := os.Mkdir(dir, 0755); err != nil {
 		return fmt.Errorf("unable to create dir '%v' with error '%v'", dir, err)
@@ -192,12 +208,21 @@ func createProject(dir string, org string) error {
 }
 
 func getGitName() (string, error) {
-	cmd := exec.Command("git", "config", "user.name")
-	stdout, err := cmd.Output()
+	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf("unable to get git config author name with error %v", err)
+		return "", fmt.Errorf("unable to get home folder with error %v", err)
 	}
-	return string(stdout), nil
+	gitConfig := filepath.Join(home, ".gitconfig")
+	f, err := os.Open(gitConfig)
+	if err != nil {
+		return "", fmt.Errorf("unable to open global .gitconfig with error %v", err)
+	}
+	defer f.Close()
+	cfg, err := config.ReadConfig(f)
+	if err != nil {
+		return "", fmt.Errorf("unable to parse global .gitconfig with error %v", err)
+	}
+	return cfg.User.Email, nil
 }
 
 func createLicense(year int, author string) string {

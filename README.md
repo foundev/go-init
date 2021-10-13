@@ -14,6 +14,12 @@ go-init <new project dir>
 curl -s https://raw.githubusercontent.com/foundev/go-init/main/scripts/install.sh | bash
 ```
 
+# use docker to run
+
+```sh
+docker run -v $(pwd):/opt -it ghcr.io/foundev/go-init go-init /opt/testrepository foundev "Ryan Svihla"
+```
+
 ## how to build and run
 
 ```sh
